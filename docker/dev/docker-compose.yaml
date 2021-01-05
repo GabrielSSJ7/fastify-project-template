@@ -1,0 +1,77 @@
+version: '2'
+services:
+  api-dev:
+       build:
+         context: .
+         dockerfile: ./api/Dockerfile
+       restart: always  
+       volumes:
+         - ../../.:/code/
+         - /var/api-dev/storage:/storage
+         - /etc/localtime:/etc/localtime
+       container_name: api-dev
+       command: yarn dev
+       environment:
+         - TERM=xterm-256color
+       privileged: true
+       expose:
+         - "80"
+       ports:
+         - "8001:3000"
+       links:
+         - api-mongo-dev
+         - redis-dev
+       networks:
+         - default
+       logging:
+         options:
+           max-size: "500m"
+           max-file: "2"
+  api-mongo-dev:
+      image: mongo
+      restart: always
+      container_name: api-mongo-dev
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: consensu
+        MONGO_INITDB_ROOT_PASSWORD: q1w2e3r4
+      volumes:
+        - /var/mongo/api-dev:/data/db
+      ports:
+        - "27018:27017"
+      expose:
+        - "27017"
+      networks:
+        - default
+  api-agenda-dev:
+       build:
+         context: ../../.
+         dockerfile: ./docker/dev/agendash/DockerFile
+       volumes:
+         - /etc/localtime:/etc/localtime
+       container_name: api-agenda-dev
+       environment:
+         PORT: 3001
+       depends_on: 
+         - api-mongo-dev
+       links:
+         - api-mongo-dev
+       ports:
+         - "3002:3001"
+       networks:
+         - default
+  redis-dev:
+    image: 'docker.io/bitnami/redis:6.0-debian-10'
+    container_name: redis-dev
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+networks:
+  default:
+volumes:
+  redis_data:
+    driver: local    

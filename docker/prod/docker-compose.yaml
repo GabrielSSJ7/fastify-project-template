@@ -1,0 +1,45 @@
+version: '2'
+services:
+  core-mongo-prod:
+      image: mongo:4.0
+      container_name: core-mongo-prod
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: core
+        MONGO_INITDB_ROOT_PASSWORD: q1w2e3r4
+      volumes:
+        - mongo:/data/db
+      ports:
+        - "27017:27017"
+      expose:
+        - "27017"
+      networks:
+        - core-network  
+  core-api-prod:
+    build:
+      context: ../../.
+      dockerfile: ./docker/prod/Dockerfile
+    volumes:
+      - /etc/localtime:/etc/localtime
+    container_name: core-api-prod
+    command: npm run serve
+    networks:
+      - core-network
+    environment:
+      - APP_ENV=production
+      - TERM=xterm-256color
+      - CLUSTER_WEB=true
+    privileged: true
+    links:
+      - core-mongo-prod
+    dns:
+      - 8.8.8.8
+    expose:
+      - "8000"
+      - "443"
+    ports:
+      - "8000:8080"
+      - "443:443"
+networks:
+  core-network:
+volumes:
+  mongo:

@@ -1,0 +1,12 @@
+FROM node:alpine
+
+RUN npm install agendash
+
+COPY /docker/dev/agendash/entrypoint.sh /
+COPY .env /
+RUN chmod +x entrypoint.sh
+
+EXPOSE ${PORT}
+
+ENTRYPOINT ./entrypoint.sh
+CMD ["sh"]
